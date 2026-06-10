@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KI-Nutzung – Umfrage</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #F7F6F3; --surface: #FFFFFF; --border: #E2E0DA; --border-strong: #C8C5BC;
+    --text: #1A1A18; --text-secondary: #6B6960; --text-tertiary: #9E9B93;
+    --blue: #2563EB; --blue-light: #EFF4FF; --blue-mid: #BFCFFE;
+    --green: #16A34A; --green-light: #F0FDF4; --radius: 10px; --radius-sm: 6px;
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 2rem 1rem; }
+  .container { max-width: 660px; margin: 0 auto; }
+  .header { text-align: center; margin-bottom: 2rem; }
+  .header-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--blue-light); color: var(--blue); border: 1px solid var(--blue-mid); border-radius: 99px; padding: 4px 12px; font-size: 12px; font-weight: 500; margin-bottom: 12px; }
+  .header h1 { font-size: 26px; font-weight: 600; letter-spacing: -0.5px; }
+  .header p { margin-top: 6px; font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+
+  /* Language switcher */
+  .lang-bar { display: flex; justify-content: center; gap: 4px; margin-bottom: 1.5rem; }
+  .lang-btn { padding: 6px 16px; font-size: 13px; font-weight: 500; border-radius: 99px; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text-secondary); cursor: pointer; font-family: inherit; transition: all 0.15s; }
+  .lang-btn:hover { border-color: var(--blue); color: var(--blue); }
+  .lang-btn.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1rem; }
+  .progress-bar { display: flex; gap: 4px; margin-bottom: 1.5rem; }
+  .progress-seg { height: 3px; flex: 1; background: var(--border); border-radius: 3px; transition: background 0.3s; }
+  .progress-seg.active { background: var(--blue); }
+  .question-label { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; line-height: 1.4; }
+  .question-sub { font-size: 13px; color: var(--text-secondary); margin-bottom: 14px; }
+  .pills { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pill { background: var(--surface); border: 1px solid var(--border-strong); border-radius: 99px; padding: 7px 16px; font-size: 13px; color: var(--text); cursor: pointer; transition: all 0.15s; font-family: inherit; }
+  .pill:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
+  .pill.selected { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .option-cards { display: flex; flex-wrap: wrap; gap: 8px; }
+  .option-card { background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); padding: 12px 14px; cursor: pointer; transition: all 0.15s; display: flex; align-items: flex-start; gap: 10px; min-width: 150px; font-family: inherit; text-align: left; }
+  .option-card:hover { border-color: var(--blue); background: var(--blue-light); }
+  .option-card.selected { border-color: var(--blue); background: var(--blue-light); }
+  .option-card .icon { font-size: 20px; flex-shrink: 0; }
+  .option-card .card-title { font-size: 13px; font-weight: 500; color: var(--text); display: block; }
+  .option-card .card-sub { font-size: 11px; color: var(--text-tertiary); display: block; margin-top: 2px; }
+  .option-card.selected .card-title { color: var(--blue); }
+  textarea { width: 100%; padding: 10px 12px; font-size: 13px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); resize: vertical; min-height: 80px; font-family: inherit; margin-top: 10px; outline: none; transition: border-color 0.15s; }
+  textarea:focus { border-color: var(--blue); }
+  .other-input { display: none; margin-top: 8px; width: 100%; padding: 8px 12px; font-size: 13px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font-family: inherit; outline: none; }
+  .other-input.visible { display: block; }
+  .name-input { width: 100%; padding: 10px 12px; font-size: 14px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font-family: inherit; outline: none; transition: border-color 0.15s; }
+  .name-input:focus { border-color: var(--blue); }
+  .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border); }
+  .btn { padding: 9px 20px; font-size: 13px; font-weight: 500; border-radius: var(--radius-sm); cursor: pointer; font-family: inherit; transition: all 0.15s; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); }
+  .btn:hover { background: var(--bg); }
+  .btn-primary { background: var(--blue); color: #fff; border-color: var(--blue); }
+  .btn-primary:hover { background: #1d4ed8; }
+  .btn-skip { color: var(--text-tertiary); border-color: transparent; background: transparent; }
+  .btn-skip:hover { color: var(--text-secondary); background: var(--bg); border-color: var(--border); }
+  .step-count { font-size: 12px; color: var(--text-tertiary); font-weight: 500; }
+  .success-icon { width: 56px; height: 56px; background: var(--green-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; font-size: 24px; }
+  .dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+  .dash-header h2 { font-size: 20px; font-weight: 600; }
+  .dash-meta { font-size: 13px; color: var(--text-secondary); }
+  .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 1rem; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; text-align: center; }
+  .stat-num { font-size: 28px; font-weight: 600; color: var(--blue); }
+  .stat-label { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+  .chart-section { margin-bottom: 1rem; }
+  .chart-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: var(--text); }
+  .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .bar-label { font-size: 12px; color: var(--text-secondary); width: 180px; flex-shrink: 0; text-align: right; }
+  .bar-wrap { flex: 1; background: var(--bg); border-radius: 3px; height: 22px; overflow: hidden; }
+  .bar-fill { height: 100%; background: var(--blue); border-radius: 3px; transition: width 0.5s; display: flex; align-items: center; padding-left: 8px; }
+  .bar-val { font-size: 11px; color: #fff; font-weight: 500; white-space: nowrap; }
+  .bar-val-out { font-size: 12px; color: var(--text-secondary); margin-left: 6px; }
+  .comments-list { list-style: none; }
+  .comment-item { padding: 10px 14px; background: var(--bg); border-radius: var(--radius-sm); font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; line-height: 1.5; border-left: 3px solid var(--blue-mid); }
+  .tab-bar { display: flex; gap: 4px; margin-bottom: 1.5rem; background: var(--bg); padding: 4px; border-radius: var(--radius-sm); }
+  .tab { flex: 1; padding: 8px; font-size: 13px; font-weight: 500; text-align: center; cursor: pointer; border-radius: 6px; color: var(--text-secondary); border: none; background: transparent; font-family: inherit; transition: all 0.15s; }
+  .tab.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .nav-link { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--blue); cursor: pointer; text-decoration: none; padding: 6px 0; }
+  .nav-link:hover { text-decoration: underline; }
+  .hidden { display: none !important; }
+  @media (max-width: 480px) {
+    .stat-grid { grid-template-columns: repeat(2,1fr); }
+    .bar-label { width: 110px; font-size: 11px; }
+    .option-cards { flex-direction: column; }
+    .option-card { min-width: unset; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="header-badge">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><circle cx="6" cy="6" r="5" fill-opacity="0.3"/><circle cx="6" cy="6" r="2"/></svg>
+      <span id="lbl-badge">Umfrage</span>
+    </div>
+    <h1 id="lbl-title">KI-Nutzung im Arbeitsalltag</h1>
+    <p id="lbl-subtitle">Beantworte 4 kurze Fragen – dauert etwa 2 Minuten.</p>
+  </div>
+
+  <!-- Language Switcher -->
+  <div class="lang-bar">
+    <button class="lang-btn active" onclick="setLang('de')">🇩🇪 Deutsch</button>
+    <button class="lang-btn" onclick="setLang('fr')">🇫🇷 Français</button>
+    <button class="lang-btn" onclick="setLang('es')">🇪🇸 Español</button>
+  </div>
+
+  <!-- SURVEY -->
+  <div id="screen-survey">
+    <div class="card">
+      <div class="progress-bar">
+        <div class="progress-seg active" id="p1"></div>
+        <div class="progress-seg" id="p2"></div>
+        <div class="progress-seg" id="p3"></div>
+        <div class="progress-seg" id="p4"></div>
+        <div class="progress-seg" id="p5"></div>
+        <div class="progress-seg" id="p6"></div>
+        <div class="progress-seg" id="p7"></div>
+      </div>
+
+      <!-- Step 1 -->
+      <div id="step-1">
+        <div class="question-label" id="q1-label"></div>
+        <div class="question-sub" id="q1-sub"></div>
+        <div class="pills" data-name="ki_nutzung" data-multi="false" id="q1-pills"></div>
+        <div class="card-footer">
+          <span class="step-count" id="q1-count"></span>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-skip" id="q1-skip" onclick="nextStep(2)"></button>
+            <button class="btn btn-primary" id="q1-next" onclick="nextStep(2)"></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div id="step-2" class="hidden">
+        <div class="question-label" id="q2-label"></div>
+        <div class="question-sub" id="q2-sub"></div>
+        <div class="option-cards" data-name="ki_wie" data-multi="true" id="q2-cards"></div>
+        <input type="text" class="other-input" id="other-ki_wie">
+        <div class="card-footer">
+          <span class="step-count" id="q2-count"></span>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-skip" id="q2-skip" onclick="nextStep(3)"></button>
+            <button class="btn btn-primary" id="q2-next" onclick="nextStep(3)"></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div id="step-3" class="hidden">
+        <div class="question-label" id="q3-label"></div>
+        <div class="question-sub" id="q3-sub"></div>
+        <div class="pills" data-name="ki_tools" data-multi="true" id="q3-pills"></div>
+        <input type="text" class="other-input" id="other-ki_tools">
+        <div class="card-footer">
+          <span class="step-count" id="q3-count"></span>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-skip" id="q3-skip" onclick="nextStep(4)"></button>
+            <button class="btn btn-primary" id="q3-next" onclick="nextStep(4)"></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4 -->
+      <div id="step-4" class="hidden">
+        <div class="question-label" id="q4-label"></div>
+        <div class="question-sub" id="q4-sub"></div>
+        <div class="pills" data-name="ki_potenzial" data-multi="true" id="q4-pills"></div>
+        <input type="text" class="other-input" id="other-ki_potenzial">
+        <div class="card-footer">
+          <span class="step-count" id="q4-count"></span>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-skip" id="q4-skip" onclick="nextStep(5)"></button>
+            <button class="btn btn-primary" id="q4-next" onclick="nextStep(5)"></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 5 -->
+      <div id="step-5" class="hidden">
+        <div class="question-label" id="q5-label"></div>
+        <div class="question-sub" id="q5-sub"></div>
+        <div class="pills" data-name="ki_bedenken" data-multi="true" id="q5-pills"></div>
+        <input type="text" class="other-input" id="other-ki_bedenken">
+        <div class="card-footer">
+          <span class="step-count" id="q5-count"></span>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-skip" id="q5-skip" onclick="nextStep(6)"></button>
+            <button class="btn btn-primary" id="q5-next" onclick="nextStep(6)"></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 6 -->
+      <div id="step-6" class="hidden">
+        <div class="question-label" id="q6-label"></div>
+        <div class="question-sub" id="q6-sub"></div>
+        <textarea id="q6-textarea" data-name="ki_wuensche"></textarea>
+        <div class="card-footer">
+          <span class="step-count" id="q6-count"></span>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-skip" id="q6-skip" onclick="nextStep(7)"></button>
+            <button class="btn btn-primary" id="q6-next" onclick="nextStep(7)"></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 7 -->
+      <div id="step-7" class="hidden">
+        <div class="question-label" id="q7-label"></div>
+        <div class="question-sub" id="q7-sub"></div>
+        <input type="text" id="input-name" class="name-input">
+        <p id="q7-note" style="font-size:12px;color:var(--text-tertiary);margin-top:8px"></p>
+        <div class="card-footer">
+          <span class="step-count" id="q7-count"></span>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-skip" id="q7-skip" onclick="submitSurvey()"></button>
+            <button class="btn btn-primary" id="q7-next" onclick="submitSurvey()"></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:1rem">
+      <a class="nav-link" id="lnk-dashboard" onclick="showDashboard()">📊 <span id="lnk-dash-text"></span></a>
+    </div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div id="screen-success" class="hidden">
+    <div class="card" style="text-align:center;padding:3rem 1.5rem">
+      <div class="success-icon">✅</div>
+      <h2 id="success-title" style="font-size:20px;font-weight:600;margin-bottom:8px"></h2>
+      <p id="success-body" style="color:var(--text-secondary);font-size:14px;line-height:1.6;margin-top:8px"></p>
+      <div style="margin-top:1.5rem">
+        <a class="nav-link" onclick="showDashboard()" style="justify-content:center" id="success-dash-link"></a>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="screen-dashboard" class="hidden">
+    <div class="card">
+      <div class="dash-header">
+        <div>
+          <h2 id="dash-title"></h2>
+          <div class="dash-meta" id="dash-meta"></div>
+        </div>
+        <button class="btn" id="btn-refresh" onclick="loadDashboard()"></button>
+      </div>
+      <div class="tab-bar">
+        <button class="tab active" id="tab-btn-stats" onclick="showTab('tab-stats')"></button>
+        <button class="tab" id="tab-btn-details" onclick="showTab('tab-details')"></button>
+        <button class="tab" id="tab-btn-export" onclick="showTab('tab-export')"></button>
+      </div>
+      <div id="tab-stats">
+        <div class="stat-grid" id="stat-grid"></div>
+        <div id="charts"></div>
+      </div>
+      <div id="tab-details" class="hidden">
+        <div id="comments-section"></div>
+      </div>
+      <div id="tab-export" class="hidden">
+        <p id="export-desc" style="font-size:14px;color:var(--text-secondary);margin-bottom:1rem"></p>
+        <button class="btn btn-primary" id="btn-export" onclick="exportCSV()"></button>
+        <p id="export-hint" style="font-size:12px;color:var(--text-tertiary);margin-top:10px"></p>
+      </div>
+      <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border)">
+        <a class="nav-link" id="lnk-back" onclick="backToSurvey()"></a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ─── Translations ───
+const T = {
+  de: {
+    badge: 'Umfrage',
+    title: 'KI-Nutzung im Arbeitsalltag',
+    subtitle: 'Beantworte 7 kurze Fragen – dauert etwa 2 Minuten.',
+    skip: 'Überspringen',
+    next: 'Weiter →',
+    submit: 'Absenden ✓',
+    lnkDash: 'Auswertung anzeigen',
+    successTitle: 'Danke für deine Antworten!',
+    successBody: 'Deine Eingaben wurden gespeichert. Du kannst das Fenster nun schließen.',
+    successDash: '📊 Auswertung ansehen →',
+    dashTitle: 'Auswertung',
+    dashLoading: 'Wird geladen…',
+    dashEmpty: 'Noch keine Antworten vorhanden.',
+    dashNoEntries: 'Noch keine Einträge gespeichert.',
+    dashLast: 'Letzte',
+    dashTotal: 'Antworten gesamt',
+    dashUse: 'Nutzen KI',
+    dashLastDate: 'Letzte Antwort',
+    refresh: '↻ Aktualisieren',
+    tabStats: 'Übersicht',
+    tabDetails: 'Details',
+    tabExport: 'Export',
+    exportDesc: 'Alle Antworten als CSV-Datei herunterladen – kompatibel mit Excel und Google Sheets.',
+    exportBtn: '⬇ CSV herunterladen',
+    exportHint: 'Jede Zeile = eine Antwort. Spalten: Datum, Sprache, Name, ki_nutzung, ki_wie, ki_tools, ki_potenzial, ki_potenzial_text, ki_bedenken, ki_wuensche',
+    exportEmpty: 'Noch keine Daten zum Exportieren.',
+    back: '← Zurück zur Umfrage',
+    noData: 'Keine Daten',
+    noComments: 'Noch keine Freitexte vorhanden.',
+    chartLabels: { ki_nutzung:'KI-Nutzung', ki_wie:'Wie wird KI eingesetzt?', ki_tools:'Genutzte KI-Tools', ki_potenzial:'Potenzielle Anwendungen', ki_bedenken:'Bedenken' },
+    commentLabels: { ki_wuensche:'Wünsche & Erwartungen', ki_kommentar:'Anmerkungen', ki_potenzial_text:'Anwendungsbeispiele' },
+    q1: { label:'Nutzt du bereits KI-Tools in deinem Arbeitsalltag?', sub:'Wähle eine Antwort.', count:'1 / 6',
+          options:['Ja, regelmäßig','Ja, gelegentlich','Nein, aber interessiert','Nein'] },
+    q2: { label:'Wie nutzt du KI aktuell?', sub:'Mehrfachauswahl möglich.',
+          labelAlt:'Was könntest du dir vorstellen zu nutzen?', count:'2 / 6',
+          otherPlaceholder:'Bitte beschreibe kurz…',
+          cards:[
+            {v:'Texte verfassen', icon:'✍️', sub:'Schreiben, Zusammenfassen'},
+            {v:'Recherche', icon:'🔍', sub:'Informationen finden'},
+            {v:'Code & Entwicklung', icon:'💻', sub:'Programmieren, Debugging'},
+            {v:'Bilder & Design', icon:'🎨', sub:'Generieren, bearbeiten'},
+            {v:'Analyse & Auswertung', icon:'📊', sub:'Daten, Berichte'},
+            {v:'Kommunikation & E-Mails', icon:'✉️', sub:'E-Mails, Nachrichten'},
+            {v:'Anderes', icon:'➕', sub:'Eigene Eingabe', other:true}
+          ]},
+    q3: { label:'Welche KI-Tools benutzt du?', sub:'Mehrfachauswahl möglich.', count:'3 / 6',
+          otherPlaceholder:'Tool-Name eingeben…',
+          options:['ChatGPT','Claude (Anthropic)','Microsoft Copilot','Google Gemini','GitHub Copilot','Midjourney','DALL·E','Perplexity','Anderes'] },
+    q4: { label:'Welche Aufgaben könnten durch KI gut unterstützt werden?', sub:'Mehrfachauswahl möglich.', count:'4 / 6',
+          otherPlaceholder:'Eigene Idee…',
+          textareaPlaceholder:'Konkrete Beispiele aus deinem Bereich? (optional)',
+          options:['Routineaufgaben automatisieren','Dokumentation & Berichte','Kundenbetreuung & Support','Entscheidungsunterstützung','Datenanalyse','Weiterbildung & Wissen','Kreative Aufgaben','Anderes'] },
+    q5: { label:'Was sind deine größten Bedenken beim Einsatz von KI?', sub:'Mehrfachauswahl möglich.', count:'5 / 7',
+          otherPlaceholder:'Weitere Bedenken…',
+          options:['Datenschutz & Sicherheit','Qualität & Zuverlässigkeit','Jobveränderung','Fehlende Schulung','Ethische Fragen','Kosten & Aufwand','Keine Bedenken','Anderes'] },
+    q6: { label:'Was wünschst du dir vom KI-Einsatz in deinem Unternehmen?', sub:'Freitext – schreibe was dir wichtig ist.', count:'6 / 7',
+          textareaPlaceholder:'z.B. bessere Tools, mehr Schulungen, klare Richtlinien…' },
+    q7: { label:'Dein Name', labelSuffix:'(freiwillig)', sub:'Falls wir bei deinen Antworten Rückfragen haben.', count:'7 / 7',
+          note:'Die Angabe ist vollständig freiwillig und wird nur für Rückfragen genutzt.', placeholder:'Vorname, Nachname oder Kürzel…' }
+  },
+  fr: {
+    badge: 'Sondage',
+    title: 'Utilisation de l\'IA au travail',
+    subtitle: 'Répondez à 7 questions rapides – environ 2 minutes.',
+    skip: 'Passer',
+    next: 'Suivant →',
+    submit: 'Envoyer ✓',
+    lnkDash: 'Voir les résultats',
+    successTitle: 'Merci pour vos réponses !',
+    successBody: 'Vos réponses ont été enregistrées. Vous pouvez fermer cette fenêtre.',
+    successDash: '📊 Voir les résultats →',
+    dashTitle: 'Résultats',
+    dashLoading: 'Chargement…',
+    dashEmpty: 'Aucune réponse pour l\'instant.',
+    dashNoEntries: 'Aucune entrée enregistrée.',
+    dashLast: 'Dernier',
+    dashTotal: 'Réponses totales',
+    dashUse: 'Utilisent l\'IA',
+    dashLastDate: 'Dernière réponse',
+    refresh: '↻ Actualiser',
+    tabStats: 'Aperçu',
+    tabDetails: 'Détails',
+    tabExport: 'Export',
+    exportDesc: 'Télécharger toutes les réponses en CSV – compatible Excel et Google Sheets.',
+    exportBtn: '⬇ Télécharger CSV',
+    exportHint: 'Chaque ligne = une réponse. Colonnes : date, langue, nom, ki_nutzung, ki_wie, ki_tools, ki_potenzial, ki_potenzial_text, ki_bedenken, ki_wuensche',
+    exportEmpty: 'Pas encore de données à exporter.',
+    back: '← Retour au sondage',
+    noData: 'Pas de données',
+    noComments: 'Pas encore de texte libre.',
+    chartLabels: { ki_nutzung:'Utilisation de l\'IA', ki_wie:'Comment utilisez-vous l\'IA ?', ki_tools:'Outils IA utilisés', ki_potenzial:'Applications potentielles', ki_bedenken:'Préoccupations' },
+    commentLabels: { ki_wuensche:'Souhaits & attentes', ki_kommentar:'Remarques', ki_potenzial_text:'Exemples d\'utilisation' },
+    q1: { label:'Utilisez-vous déjà des outils d\'IA dans votre travail ?', sub:'Choisissez une réponse.', count:'1 / 6',
+          options:['Oui, régulièrement','Oui, occasionnellement','Non, mais intéressé(e)','Non'] },
+    q2: { label:'Comment utilisez-vous l\'IA actuellement ?', sub:'Plusieurs choix possibles.',
+          labelAlt:'Qu\'imaginez-vous utiliser ?', count:'2 / 6',
+          otherPlaceholder:'Décrivez brièvement…',
+          cards:[
+            {v:'Rédaction de textes', icon:'✍️', sub:'Écrire, résumer'},
+            {v:'Recherche', icon:'🔍', sub:'Trouver des informations'},
+            {v:'Code & développement', icon:'💻', sub:'Programmer, déboguer'},
+            {v:'Images & design', icon:'🎨', sub:'Générer, modifier'},
+            {v:'Analyse & rapports', icon:'📊', sub:'Données, rapports'},
+            {v:'Communication & e-mails', icon:'✉️', sub:'E-mails, messages'},
+            {v:'Autre', icon:'➕', sub:'Saisie libre', other:true}
+          ]},
+    q3: { label:'Quels outils d\'IA utilisez-vous ?', sub:'Plusieurs choix possibles.', count:'3 / 6',
+          otherPlaceholder:'Nom de l\'outil…',
+          options:['ChatGPT','Claude (Anthropic)','Microsoft Copilot','Google Gemini','GitHub Copilot','Midjourney','DALL·E','Perplexity','Autre'] },
+    q4: { label:'Quelles tâches pourraient être bien soutenues par l\'IA ?', sub:'Plusieurs choix possibles.', count:'4 / 6',
+          otherPlaceholder:'Votre idée…',
+          textareaPlaceholder:'Des exemples concrets dans votre domaine ? (optionnel)',
+          options:['Automatiser les tâches répétitives','Documentation & rapports','Service client & support','Aide à la décision','Analyse de données','Formation & gestion des connaissances','Tâches créatives','Autre'] },
+    q5: { label:'Quelles sont vos principales préoccupations concernant l\'IA ?', sub:'Plusieurs choix possibles.', count:'5 / 7',
+          otherPlaceholder:'Autres préoccupations…',
+          options:['Protection des données','Qualité & fiabilité','Transformation de l\'emploi','Manque de formation','Questions éthiques','Coûts & effort','Aucune préoccupation','Autre'] },
+    q6: { label:'Qu\'attendez-vous de l\'utilisation de l\'IA dans votre entreprise ?', sub:'Texte libre – écrivez ce qui vous semble important.', count:'6 / 7',
+          textareaPlaceholder:'p.ex. meilleurs outils, plus de formations, directives claires…' },
+    q7: { label:'Votre nom', labelSuffix:'(facultatif)', sub:'Au cas où nous aurions des questions sur vos réponses.', count:'7 / 7',
+          note:'Cette information est entièrement facultative et ne sera utilisée que pour des questions de suivi.', placeholder:'Prénom, nom ou initiales…' }
+  },
+  es: {
+    badge: 'Encuesta',
+    title: 'Uso de la IA en el trabajo',
+    subtitle: 'Responda 7 preguntas rápidas – unos 2 minutos.',
+    skip: 'Omitir',
+    next: 'Siguiente →',
+    submit: 'Enviar ✓',
+    lnkDash: 'Ver resultados',
+    successTitle: '¡Gracias por sus respuestas!',
+    successBody: 'Sus respuestas han sido guardadas. Puede cerrar esta ventana.',
+    successDash: '📊 Ver resultados →',
+    dashTitle: 'Resultados',
+    dashLoading: 'Cargando…',
+    dashEmpty: 'Aún no hay respuestas.',
+    dashNoEntries: 'Aún no hay entradas guardadas.',
+    dashLast: 'Última',
+    dashTotal: 'Respuestas totales',
+    dashUse: 'Usan IA',
+    dashLastDate: 'Última respuesta',
+    refresh: '↻ Actualizar',
+    tabStats: 'Resumen',
+    tabDetails: 'Detalles',
+    tabExport: 'Exportar',
+    exportDesc: 'Descargar todas las respuestas en CSV – compatible con Excel y Google Sheets.',
+    exportBtn: '⬇ Descargar CSV',
+    exportHint: 'Cada fila = una respuesta. Columnas: fecha, idioma, nombre, ki_nutzung, ki_wie, ki_tools, ki_potenzial, ki_potenzial_text, ki_bedenken, ki_wuensche',
+    exportEmpty: 'Aún no hay datos para exportar.',
+    back: '← Volver a la encuesta',
+    noData: 'Sin datos',
+    noComments: 'Aún no hay texto libre.',
+    chartLabels: { ki_nutzung:'Uso de IA', ki_wie:'¿Cómo usa la IA?', ki_tools:'Herramientas de IA usadas', ki_potenzial:'Aplicaciones potenciales', ki_bedenken:'Preocupaciones' },
+    commentLabels: { ki_wuensche:'Deseos & expectativas', ki_kommentar:'Comentarios', ki_potenzial_text:'Ejemplos de uso' },
+    q1: { label:'¿Ya utiliza herramientas de IA en su trabajo diario?', sub:'Elija una respuesta.', count:'1 / 6',
+          options:['Sí, regularmente','Sí, ocasionalmente','No, pero estoy interesado/a','No'] },
+    q2: { label:'¿Cómo utiliza la IA actualmente?', sub:'Selección múltiple posible.',
+          labelAlt:'¿Qué se imagina utilizando?', count:'2 / 6',
+          otherPlaceholder:'Describa brevemente…',
+          cards:[
+            {v:'Redacción de textos', icon:'✍️', sub:'Escribir, resumir'},
+            {v:'Investigación', icon:'🔍', sub:'Buscar información'},
+            {v:'Código & desarrollo', icon:'💻', sub:'Programar, depurar'},
+            {v:'Imágenes & diseño', icon:'🎨', sub:'Generar, editar'},
+            {v:'Análisis & informes', icon:'📊', sub:'Datos, informes'},
+            {v:'Comunicación & correos', icon:'✉️', sub:'E-mails, mensajes'},
+            {v:'Otro', icon:'➕', sub:'Entrada libre', other:true}
+          ]},
+    q3: { label:'¿Qué herramientas de IA utiliza?', sub:'Selección múltiple posible.', count:'3 / 6',
+          otherPlaceholder:'Nombre de la herramienta…',
+          options:['ChatGPT','Claude (Anthropic)','Microsoft Copilot','Google Gemini','GitHub Copilot','Midjourney','DALL·E','Perplexity','Otro'] },
+    q4: { label:'¿Qué tareas podrían ser bien apoyadas por la IA?', sub:'Selección múltiple posible.', count:'4 / 6',
+          otherPlaceholder:'Su idea…',
+          textareaPlaceholder:'¿Ejemplos concretos de su área? (opcional)',
+          options:['Automatizar tareas rutinarias','Documentación & informes','Atención al cliente & soporte','Apoyo a la toma de decisiones','Análisis de datos','Formación & gestión del conocimiento','Tareas creativas','Otro'] },
+    q5: { label:'¿Cuáles son sus principales preocupaciones sobre el uso de la IA?', sub:'Selección múltiple posible.', count:'5 / 7',
+          otherPlaceholder:'Otras preocupaciones…',
+          options:['Protección de datos','Calidad & fiabilidad','Cambios en el empleo','Falta de formación','Cuestiones éticas','Costes & esfuerzo','Sin preocupaciones','Otro'] },
+    q6: { label:'¿Qué espera del uso de la IA en su empresa?', sub:'Texto libre – escriba lo que le parece importante.', count:'6 / 7',
+          textareaPlaceholder:'p.ej. mejores herramientas, más formación, directrices claras…' },
+    q7: { label:'Su nombre', labelSuffix:'(opcional)', sub:'Por si tenemos preguntas sobre sus respuestas.', count:'7 / 7',
+          note:'Este dato es completamente voluntario y solo se usará para consultas.', placeholder:'Nombre, apellido o iniciales…' }
+  }
+};
+
+// ─── Storage ───
+async function storageSet(key, value, shared) {
+  if (window.storage) return window.storage.set(key, value, shared);
+  try { localStorage.setItem(key, value); return {key,value}; } catch(e) { return null; }
+}
+async function storageGet(key, shared) {
+  if (window.storage) return window.storage.get(key, shared);
+  try { const v = localStorage.getItem(key); return v ? {key,value:v} : null; } catch(e) { return null; }
+}
+async function storageList(prefix, shared) {
+  if (window.storage) return window.storage.list(prefix, shared);
+  try {
+    const keys = [];
+    for (let i=0; i<localStorage.length; i++) { const k=localStorage.key(i); if(!prefix||k.startsWith(prefix)) keys.push(k); }
+    return {keys};
+  } catch(e) { return null; }
+}
+
+// ─── State ───
+let lang = 'de';
+let currentStep = 1;
+const answers = {};
+
+// ─── Language switch ───
+function setLang(l) {
+  lang = l;
+  document.querySelectorAll('.lang-btn').forEach((b,i) => b.classList.toggle('active', ['de','fr','es'][i]===l));
+  document.documentElement.lang = l;
+  renderAll();
+}
+
+function renderAll() {
+  const t = T[lang];
+  document.getElementById('lbl-badge').textContent = t.badge;
+  document.getElementById('lbl-title').textContent = t.title;
+  document.getElementById('lbl-subtitle').textContent = t.subtitle;
+  document.getElementById('lnk-dash-text').textContent = t.lnkDash;
+  document.getElementById('success-title').textContent = t.successTitle;
+  document.getElementById('success-body').textContent = t.successBody;
+  document.getElementById('success-dash-link').textContent = t.successDash;
+  document.getElementById('dash-title').textContent = t.dashTitle;
+  document.getElementById('btn-refresh').textContent = t.refresh;
+  document.getElementById('tab-btn-stats').textContent = t.tabStats;
+  document.getElementById('tab-btn-details').textContent = t.tabDetails;
+  document.getElementById('tab-btn-export').textContent = t.tabExport;
+  document.getElementById('export-desc').textContent = t.exportDesc;
+  document.getElementById('btn-export').textContent = t.exportBtn;
+  document.getElementById('export-hint').textContent = t.exportHint;
+  document.getElementById('lnk-back').textContent = t.back;
+
+  renderStep1(); renderStep2(); renderStep3(); renderStep4(); renderStep5(); renderStep6(); renderStep7();
+}
+
+function renderStep1() {
+  const t = T[lang]; const q = t.q1;
+  document.getElementById('q1-label').textContent = q.label;
+  document.getElementById('q1-sub').textContent = q.sub;
+  document.getElementById('q1-count').textContent = q.count;
+  document.getElementById('q1-skip').textContent = t.skip;
+  document.getElementById('q1-next').textContent = t.next;
+  const pills = document.getElementById('q1-pills');
+  pills.innerHTML = q.options.map(o => `<button class="pill" data-value="${o}">${o}</button>`).join('');
+  reattachPillListeners(pills);
+}
+
+function renderStep2() {
+  const t = T[lang]; const q = t.q2;
+  const v = answers['ki_nutzung']||'';
+  const isNo = v === T[lang].q1.options[2] || v === T[lang].q1.options[3];
+  document.getElementById('q2-label').textContent = isNo ? q.labelAlt : q.label;
+  document.getElementById('q2-sub').textContent = q.sub;
+  document.getElementById('q2-count').textContent = q.count;
+  document.getElementById('q2-skip').textContent = t.skip;
+  document.getElementById('q2-next').textContent = t.next;
+  document.getElementById('other-ki_wie').placeholder = q.otherPlaceholder;
+  const cards = document.getElementById('q2-cards');
+  cards.innerHTML = q.cards.map(c =>
+    `<button class="option-card" data-value="${c.v}"${c.other?' data-other':''}>
+      <span class="icon">${c.icon}</span>
+      <span><span class="card-title">${c.v}</span><span class="card-sub">${c.sub}</span></span>
+    </button>`
+  ).join('');
+  reattachPillListeners(cards);
+}
+
+function renderStep3() {
+  const t = T[lang]; const q = t.q3;
+  document.getElementById('q3-label').textContent = q.label;
+  document.getElementById('q3-sub').textContent = q.sub;
+  document.getElementById('q3-count').textContent = q.count;
+  document.getElementById('q3-skip').textContent = t.skip;
+  document.getElementById('q3-next').textContent = t.next;
+  document.getElementById('other-ki_tools').placeholder = q.otherPlaceholder;
+  const pills = document.getElementById('q3-pills');
+  const lastOpt = q.options[q.options.length-1];
+  pills.innerHTML = q.options.map(o =>
+    `<button class="pill" data-value="${o}"${o===lastOpt?' data-other':''}>${o}</button>`
+  ).join('');
+  reattachPillListeners(pills);
+}
+
+function renderStep4() {
+  const t = T[lang]; const q = t.q4;
+  document.getElementById('q4-label').textContent = q.label;
+  document.getElementById('q4-sub').textContent = q.sub;
+  document.getElementById('q4-count').textContent = q.count;
+  document.getElementById('q4-skip').textContent = t.skip;
+  document.getElementById('q4-next').textContent = t.next;
+  document.getElementById('other-ki_potenzial').placeholder = q.otherPlaceholder;
+  const pills = document.getElementById('q4-pills');
+  const lastOpt = q.options[q.options.length-1];
+  pills.innerHTML = q.options.map(o =>
+    `<button class="pill" data-value="${o}"${o===lastOpt?' data-other':''}>${o}</button>`
+  ).join('');
+  reattachPillListeners(pills);
+}
+
+function renderStep5() {
+  const t = T[lang]; const q = t.q5;
+  document.getElementById('q5-label').textContent = q.label;
+  document.getElementById('q5-sub').textContent = q.sub;
+  document.getElementById('q5-count').textContent = q.count;
+  document.getElementById('q5-skip').textContent = t.skip;
+  document.getElementById('q5-next').textContent = t.next;
+  document.getElementById('other-ki_bedenken').placeholder = q.otherPlaceholder;
+  const pills = document.getElementById('q5-pills');
+  const lastOpt = q.options[q.options.length-1];
+  pills.innerHTML = q.options.map(o =>
+    `<button class="pill" data-value="${o}"${o===lastOpt?' data-other':''}>${o}</button>`
+  ).join('');
+  reattachPillListeners(pills);
+}
+
+function renderStep6() {
+  const t = T[lang]; const q = t.q6;
+  document.getElementById('q6-label').textContent = q.label;
+  document.getElementById('q6-sub').textContent = q.sub;
+  document.getElementById('q6-count').textContent = q.count;
+  document.getElementById('q6-skip').textContent = t.skip;
+  document.getElementById('q6-next').textContent = t.next;
+  document.getElementById('q6-textarea').placeholder = q.textareaPlaceholder;
+}
+
+function renderStep7() {
+  const t = T[lang]; const q = t.q7;
+  document.getElementById('q7-label').innerHTML = `${q.label} <span style="font-size:13px;font-weight:400;color:var(--text-tertiary)">${q.labelSuffix}</span>`;
+  document.getElementById('q7-sub').textContent = q.sub;
+  document.getElementById('q7-count').textContent = q.count;
+  document.getElementById('q7-skip').textContent = t.skip;
+  document.getElementById('q7-next').textContent = t.submit;
+  document.getElementById('q7-note').textContent = q.note;
+  document.getElementById('input-name').placeholder = q.placeholder;
+}
+
+function reattachPillListeners(container) {
+  // no-op: handled by single delegated listener below
+}
+
+// ─── Navigation ───
+function nextStep(n) {
+  collectStep(currentStep);
+  document.getElementById('step-' + currentStep).classList.add('hidden');
+  for (let i=1; i<=7; i++) document.getElementById('p'+i).classList.toggle('active', i <= n);
+  currentStep = n;
+  document.getElementById('step-' + n).classList.remove('hidden');
+  if (n === 2) renderStep2();
+}
+
+// ─── Google Apps Script URL ───
+// Trage hier deine Web-App-URL ein (Bereitstellen → Neue Bereitstellung → Web-App)
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby9qPRsdFao_cMAqK6_JYalucmA0L6myubD89EqxWUaM1iCInUu4ogdrKraaQdw12rX/exec';
+
+function collectStep(n) {
+  const card = document.getElementById('step-' + n);
+  card.querySelectorAll('[data-name]').forEach(el => {
+    const name = el.dataset.name;
+    if (el.tagName === 'TEXTAREA') {
+      if (el.value.trim()) answers[name] = el.value.trim();
+    } else if (el.classList.contains('pills') || el.classList.contains('option-cards')) {
+      const sel = [...el.querySelectorAll('.selected')].map(b => b.dataset.value || b.textContent.trim());
+      if (sel.length) answers[name] = sel.join(', ');
+      const otherBtn = el.querySelector('[data-other].selected');
+      if (otherBtn) {
+        const inp = document.getElementById('other-' + name);
+        if (inp && inp.value.trim()) answers[name + '_other'] = inp.value.trim();
+      }
+    }
+  });
+}
+
+async function submitSurvey() {
+  collectStep(currentStep);
+  const nameVal = document.getElementById('input-name').value.trim();
+  if (nameVal) answers['name'] = nameVal;
+  const entry = { ts: new Date().toISOString(), lang, ...answers };
+
+  // Zeige Ladeindikator
+  const btn = document.getElementById('q7-next');
+  const origText = btn.textContent;
+  btn.textContent = '⏳ Wird gespeichert…';
+  btn.disabled = true;
+
+  try {
+    if (SCRIPT_URL && SCRIPT_URL !== 'DEINE_APPS_SCRIPT_URL_HIER') {
+      await fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(entry)
+      });
+    }
+  } catch(e) {
+    console.warn('Speichern fehlgeschlagen:', e);
+  }
+
+  document.getElementById('screen-survey').classList.add('hidden');
+  document.getElementById('screen-success').classList.remove('hidden');
+}
+
+// ─── Dashboard ───
+function backToSurvey() {
+  document.getElementById('screen-dashboard').classList.add('hidden');
+  document.getElementById('screen-survey').classList.remove('hidden');
+}
+function showDashboard() {
+  document.getElementById('screen-survey').classList.add('hidden');
+  document.getElementById('screen-success').classList.add('hidden');
+  document.getElementById('screen-dashboard').classList.remove('hidden');
+  loadDashboard();
+}
+function showTab(id) {
+  ['tab-stats','tab-details','tab-export'].forEach(t => document.getElementById(t).classList.toggle('hidden', t!==id));
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ['tab-stats','tab-details','tab-export'][i]===id));
+}
+
+async function loadDashboard() {
+  const t = T[lang];
+  document.getElementById('dash-meta').textContent = t.dashLoading;
+  document.getElementById('stat-grid').innerHTML = '';
+  document.getElementById('charts').innerHTML = '';
+
+  if (!SCRIPT_URL || SCRIPT_URL === 'DEINE_APPS_SCRIPT_URL_HIER') {
+    document.getElementById('dash-meta').textContent = '⚠️ Bitte zuerst die Apps Script URL eintragen.';
+    return;
+  }
+
+  let entries = [];
+  try {
+    const resp = await fetch(SCRIPT_URL + '?action=get');
+    const json = await resp.json();
+    if (json.success) entries = json.data;
+  } catch(e) {
+    document.getElementById('dash-meta').textContent = '❌ Verbindung zum Google Sheet fehlgeschlagen.';
+    return;
+  }
+
+  const n = entries.length;
+  if (n === 0) {
+    document.getElementById('dash-meta').textContent = t.dashEmpty;
+    document.getElementById('stat-grid').innerHTML = `<p style="color:var(--text-tertiary);font-size:13px;padding:1rem 0">${t.dashNoEntries}</p>`;
+    return;
+  }
+
+  const dates = entries.map(e => new Date(e.ts)).sort((a,b) => b-a);
+  const latest = dates[0] ? dates[0].toLocaleDateString('de-CH') : '–';
+  document.getElementById('dash-meta').textContent = `${n} ${t.dashTotal} · ${t.dashLast}: ${latest}`;
+
+  const nutzungCounts = countField(entries, 'ki_nutzung');
+  const nutzenY = entries.filter(e => e.ki_nutzung && (e.ki_nutzung.startsWith('Ja')||e.ki_nutzung.startsWith('Oui')||e.ki_nutzung.startsWith('Sí'))).length;
+  document.getElementById('stat-grid').innerHTML = `
+    <div class="stat-card"><div class="stat-num">${n}</div><div class="stat-label">${t.dashTotal}</div></div>
+    <div class="stat-card"><div class="stat-num">${Math.round(nutzenY/n*100)||0}%</div><div class="stat-label">${t.dashUse}</div></div>
+    <div class="stat-card"><div class="stat-num">${latest}</div><div class="stat-label">${t.dashLastDate}</div></div>
+  `;
+
+  const chartsEl = document.getElementById('charts');
+  chartsEl.innerHTML = '';
+  chartsEl.appendChild(buildChart(t.chartLabels.ki_nutzung, nutzungCounts, n, t));
+  chartsEl.appendChild(buildChart(t.chartLabels.ki_wie, countMulti(entries,'ki_wie'), n, t));
+  chartsEl.appendChild(buildChart(t.chartLabels.ki_tools, countMulti(entries,'ki_tools'), n, t));
+  chartsEl.appendChild(buildChart(t.chartLabels.ki_potenzial, countMulti(entries,'ki_potenzial'), n, t));
+  chartsEl.appendChild(buildChart(t.chartLabels.ki_bedenken, countMulti(entries,'ki_bedenken'), n, t));
+
+  const commSec = document.getElementById('comments-section');
+  commSec.innerHTML = '';
+  const wuensche = entries.map(e => e.ki_wuensche).filter(Boolean);
+  const freitext = entries.map(e => e.ki_potenzial_text).filter(Boolean);
+  if (wuensche.length) commSec.appendChild(buildComments(t.commentLabels.ki_wuensche, wuensche));
+  if (freitext.length) commSec.appendChild(buildComments(t.commentLabels.ki_potenzial_text, freitext));
+  if (!wuensche.length && !freitext.length) commSec.innerHTML = `<p style="font-size:13px;color:var(--text-tertiary)">${t.noComments}</p>`;
+}
+
+function countField(entries, field) {
+  const c = {};
+  entries.forEach(e => { const v=e[field]; if(v) c[v]=(c[v]||0)+1; });
+  return c;
+}
+function countMulti(entries, field) {
+  const c = {};
+  entries.forEach(e => { const v=e[field]; if(v) v.split(', ').forEach(item => { c[item]=(c[item]||0)+1; }); });
+  return c;
+}
+function buildChart(title, counts, total, t) {
+  const div = document.createElement('div');
+  div.className = 'chart-section card'; div.style.marginBottom = '8px';
+  const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  if (!sorted.length) { div.innerHTML=`<div class="chart-title">${title}</div><p style="font-size:13px;color:var(--text-tertiary)">${t.noData}</p>`; return div; }
+  const max = sorted[0][1];
+  div.innerHTML = `<div class="chart-title">${title}</div>` + sorted.map(([label,val]) => {
+    const pct=Math.round(val/max*100), rel=Math.round(val/total*100);
+    return `<div class="bar-row"><div class="bar-label">${label}</div><div class="bar-wrap"><div class="bar-fill" style="width:${pct}%"><span class="bar-val">${val}</span></div></div><span class="bar-val-out">${rel}%</span></div>`;
+  }).join('');
+  return div;
+}
+function buildComments(title, items) {
+  const div = document.createElement('div'); div.className='chart-section';
+  div.innerHTML = `<div class="chart-title" style="margin-bottom:8px">${title}</div>`;
+  const ul = document.createElement('ul'); ul.className='comments-list';
+  items.forEach(text => { const li=document.createElement('li'); li.className='comment-item'; li.textContent=text; ul.appendChild(li); });
+  div.appendChild(ul); return div;
+}
+
+// ─── CSV Export ───
+async function exportCSV() {
+  const t = T[lang];
+  if (!SCRIPT_URL || SCRIPT_URL === 'DEINE_APPS_SCRIPT_URL_HIER') { alert('Bitte zuerst die Apps Script URL eintragen.'); return; }
+  let entries = [];
+  try {
+    const resp = await fetch(SCRIPT_URL + '?action=get');
+    const json = await resp.json();
+    if (json.success) entries = json.data;
+  } catch(e) { alert('Verbindung fehlgeschlagen.'); return; }
+  if (!entries.length) { alert(t.exportEmpty); return; }
+  const cols = ['ts','lang','name','ki_nutzung','ki_wie','ki_tools','ki_potenzial','ki_potenzial_text','ki_bedenken','ki_wuensche'];
+  const csv = [cols.join(';'), ...entries.map(e=>cols.map(c=>'"'+(e[c]||'').replace(/"/g,'""')+'"').join(';'))].join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='ki-umfrage-auswertung.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+// ─── Single delegated listener for all pills & cards ───
+document.getElementById('screen-survey').addEventListener('click', e => {
+  const btn = e.target.closest('.pill, .option-card');
+  if (!btn) return;
+  const container = btn.closest('.pills, .option-cards');
+  if (!container) return;
+  const multi = container.dataset.multi === 'true';
+  if (!multi) {
+    container.querySelectorAll('.pill,.option-card').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+  } else {
+    btn.classList.toggle('selected');
+  }
+  const name = container.dataset.name;
+  const otherBtn = container.querySelector('[data-other]');
+  const otherInp = document.getElementById('other-' + name);
+  if (otherBtn && otherInp) {
+    otherInp.classList.toggle('visible', otherBtn.classList.contains('selected'));
+  }
+});
+
+// ─── Init ───
+renderAll();
+</script>
+</body>
+</html>
